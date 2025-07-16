@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>BMI Calculator - Circular Gauge</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --under: #74b9ff;
+      --normal: #55efc4;
+      --overweight: #ffeaa7;
+      --obese: #fab1a0;
+      --primary: #0984e3;
+    }
+
+    body {
+      font-family: 'Poppins', sans-serif;
+      background: linear-gradient(to right, #dfe6e9, #b2bec3);
+      margin: 0;
+      padding: 0;
+    }
+
+    .container {
+      max-width: 500px;
+      margin: 40px auto;
+      padding: 30px;
+      background: white;
+      border-radius: 20px;
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+    }
+
+    h2 {
+      text-align: center;
+      color: var(--primary);
+      margin-bottom: 20px;
+    }
+
+    input, select, button {
+      width: 100%;
+      padding: 12px;
+      margin: 10px 0;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      font-size: 16px;
+    }
+
+    button {
+      background-color: var(--primary);
+      color: white;
+      font-weight: bold;
+      border: none;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background-color: #0652dd;
+    }
+
+    .unit-toggle {
+      text-align: center;
+      margin-bottom: 10px;
+    }
+
+    .result, .tips {
+      text-align: center;
+      margin-top: 15px;
+    }
+
+    .gauge-wrapper {
+      position: relative;
+      width: 240px;
+      height: 240px;
+      border-radius: 50%;
+      background: conic-gradient(
+        var(--under) 0deg 166deg,
+        var(--normal) 166deg 225deg,
+        var(--overweight) 225deg 270deg,
+        var(--obese) 270deg 360deg
+      );
+      margin: 30px auto 10px;
+      box-shadow: inset 0 0 8px rgba(0, 0, 0, 0.15);
+    }
+
+    .gauge-needle {
+      position: absolute;
+      width: 4px;
+      height: 110px;
+      background: black;
+      top: 30px;
+      left: 50%;
+      transform-origin: bottom center;
+      transform: rotate(0deg);
+      transition: transform 0.5s ease;
+      z-index: 2;
+    }
+
+    .gauge-center {
+      position: absolute;
+      width: 40px;
+      height: 40px;
+      background: white;
+      border: 4px solid #ccc;
+      border-radius: 50%;
+      top: 100px;
+      left: 100px;
+      z-index: 3;
+    }
+
+    .gauge-labels {
+      text-align: center;
+      font-size: 13px;
+      margin-top: -5px;
+      color: #2d3436;
+    }
+
+    .bmi-scale {
+      margin-top: 20px;
+      position: relative;
+      height: 20px;
+      background: linear-gradient(to right,
+        var(--under) 0%, var(--under) 46.25%,
+        var(--normal) 46.25%, var(--normal) 62.5%,
+        var(--overweight) 62.5%, var(--overweight) 75%,
+        var(--obese) 75%, var(--obese) 100%);
+      border-radius: 10px;
+    }
+
+    .needle {
+      position: absolute;
+      top: -10px;
+      width: 2px;
+      height: 40px;
+      background: black;
+      transition: left 0.5s ease;
+    }
+
+    .scale-marker {
+      position: absolute;
+      top: 24px;
+      transform: translateX(-50%);
+      font-size: 12px;
+      color: #333;
+    }
+
+    .note {
+      text-align: center;
+      font-size: 12px;
+      margin-top: 14px;
+      color: #636e72;
+    }
+
+    @media screen and (max-width: 500px) {
+      .container {
+        margin: 20px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <h2>BMI Calculator</h2>
+
+  <div class="unit-toggle">
+    <label><input type="radio" name="unit" value="metric" checked onchange="updateUnits()"> Metric (kg/cm)</label>
+    &nbsp;&nbsp;
+    <label><input type="radio" name="unit" value="imperial" onchange="updateUnits()"> Imperial (lbs/in)</label>
+  </div>
+
+  <input type="text" id="name" placeholder="Enter your name">
+  <input type="number" id="age" placeholder="Enter your age">
+  <select id="gender">
+    <option value="male">Male</option>
+    <option value="female">Female</option>
+  </select>
+  <input type="number" id="height" placeholder="Height in cm">
+  <input type="number" id="weight" placeholder="Weight in kg">
+  <button onclick="calculateBMI()">Calculate BMI</button>
+
+  <div class="result" id="bmiResult"></div>
+  <div class="tips" id="bmiTips"></div>
+
+  <!-- Circular Gauge -->
+  <div class="gauge-wrapper">
+    <div class="gauge-needle" id="gaugeNeedle"></div>
+    <div class="gauge-center"></div>
+  </div>
+  <div class="gauge-labels">Underweight &nbsp; Normal &nbsp; Overweight &nbsp; Obese</div>
+
+  <!-- Horizontal Scale -->
+  <div class="bmi-scale" style="position: relative;">
+    <div class="needle" id="needle"></div>
+
+    <!-- Fixed Marker Labels -->
+    <div class="scale-marker" style="left: 0%;">0</div>
+    <div class="scale-marker" style="left: 46.25%;">18.5</div>
+    <div class="scale-marker" style="left: 62.5%;">25</div>
+    <div class="scale-marker" style="left: 75%;">30</div>
+    <div class="scale-marker" style="left: 100%;">40+</div>
+  </div>
+
+  <div class="note">
+    BMI Categories: Underweight | Normal | Overweight | Obese
+  </div>
+</div>
+
+<script>
+  let unitSystem = 'metric';
+
+  function updateUnits() {
+    unitSystem = document.querySelector('input[name="unit"]:checked').value;
+    document.getElementById('height').placeholder = unitSystem === 'metric' ? 'Height in cm' : 'Height in inches';
+    document.getElementById('weight').placeholder = unitSystem === 'metric' ? 'Weight in kg' : 'Weight in lbs';
+  }
+
+  function calculateBMI() {
+    const name = document.getElementById("name").value;
+    const age = parseInt(document.getElementById("age").value);
+    let height = parseFloat(document.getElementById("height").value);
+    let weight = parseFloat(document.getElementById("weight").value);
+
+    if (!height || !weight || !age || age < 2) {
+      alert("Please enter valid data.");
+      return;
+    }
+
+    let bmi = 0;
+    if (unitSystem === 'metric') {
+      height /= 100;
+      bmi = weight / (height * height);
+    } else {
+      bmi = (weight / (height * height)) * 703;
+    }
+
+    const bmiRounded = bmi.toFixed(1);
+    let category = "", tip = "";
+
+    if (bmi < 18.5) {
+      category = "Underweight";
+      tip = "Try a balanced diet rich in proteins and good fats.";
+    } else if (bmi < 25) {
+      category = "Normal";
+      tip = "Maintain your healthy lifestyle!";
+    } else if (bmi < 30) {
+      category = "Overweight";
+      tip = "Exercise regularly and monitor your calorie intake.";
+    } else {
+      category = "Obese";
+      tip = "Consult a healthcare provider and start a fitness plan.";
+    }
+
+    document.getElementById("bmiResult").innerHTML =
+      `${name}, your BMI is <strong>${bmiRounded}</strong> and you're classified as <strong>${category}</strong>.`;
+    document.getElementById("bmiTips").innerText = tip;
+
+    // Horizontal needle
+    const maxBMI = 40;
+    const percent = Math.min((bmi / maxBMI) * 100, 100);
+    document.getElementById("needle").style.left = `calc(${percent}% - 1px)`;
+
+    // Circular gauge rotation
+    const angle = Math.min((bmi / maxBMI) * 360, 360);
+    document.getElementById("gaugeNeedle").style.transform = `rotate(${angle}deg)`;
+  }
+</script>
+
+</body>
+</html>
